@@ -1,0 +1,443 @@
+---
+title: "MiniProject"
+author: "Brody Kendall"
+date: "2/27/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(gtools)
+library(ggplot2)
+library(gridExtra)
+library(grid)
+```
+
+
+```{r}
+obs = data.frame("E" = c(21,3,7), "G" = c(11,2,1), "F-P" = c(4,2,1))
+rownames(obs) = c("Twist", "Direct", "Both")
+n = sum(obs)
+N=1000000
+```
+
+```{r}
+set.seed(1)
+### Fixed totals:
+## Haldane Prior: alpha = 0
+
+hal.tot.d = rdirichlet(N, as.vector(t(obs)))
+
+hal.tot.d.OR1 = hal.tot.d[,1]*hal.tot.d[,5]/(hal.tot.d[,2]*hal.tot.d[,4])
+hal.tot.d.OR2 = hal.tot.d[,1]*hal.tot.d[,6]/(hal.tot.d[,3]*hal.tot.d[,4])
+hal.tot.d.OR3 = hal.tot.d[,1]*hal.tot.d[,8]/(hal.tot.d[,2]*hal.tot.d[,7])
+hal.tot.d.OR4 = hal.tot.d[,1]*hal.tot.d[,9]/(hal.tot.d[,3]*hal.tot.d[,7])
+
+mean(hal.tot.d.OR1)
+mean(hal.tot.d.OR2)
+mean(hal.tot.d.OR3)
+mean(hal.tot.d.OR4)
+
+# exp(mean(log(hal.tot.d.OR1)))
+# exp(mean(log(hal.tot.d.OR2)))
+# exp(mean(log(hal.tot.d.OR3)))
+# exp(mean(log(hal.tot.d.OR4)))
+
+mean(log(hal.tot.d.OR1))
+mean(log(hal.tot.d.OR2))
+mean(log(hal.tot.d.OR3))
+mean(log(hal.tot.d.OR4))
+
+sd(log(hal.tot.d.OR1))
+sd(log(hal.tot.d.OR2))
+sd(log(hal.tot.d.OR3))
+sd(log(hal.tot.d.OR4))
+
+mean(log(hal.tot.d.OR1))/sd(log(hal.tot.d.OR1))
+mean(log(hal.tot.d.OR2))/sd(log(hal.tot.d.OR2))
+mean(log(hal.tot.d.OR3))/sd(log(hal.tot.d.OR3))
+mean(log(hal.tot.d.OR4))/sd(log(hal.tot.d.OR4))
+
+quantile(log(hal.tot.d.OR1), c(.025, .975))
+quantile(log(hal.tot.d.OR2), c(.025, .975))
+quantile(log(hal.tot.d.OR3), c(.025, .975))
+quantile(log(hal.tot.d.OR4), c(.025, .975))
+
+data = data.frame(log.OR1 = log(hal.tot.d.OR1), 
+                  log.OR2 = log(hal.tot.d.OR2),
+                  log.OR3 = log(hal.tot.d.OR3), 
+                  log.OR4 = log(hal.tot.d.OR4))
+
+p1 = ggplot(data, aes(x=log.OR1)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=0.2412, sd = 0.9858)) +
+  labs(title = "Odds Ratio 1", x = "log(odds ratio)")
+p2 = ggplot(data, aes(x=log.OR2)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=1.2528, sd = 1.0635)) +
+  labs(title = "Odds Ratio 2", x = "log(odds ratio)")
+p3 = ggplot(data, aes(x=log.OR3)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-1.2993, sd = 1.1320)) +
+  labs(title = "Odds Ratio 3", x = "log(odds ratio)")
+p4 = ggplot(data, aes(x=log.OR4)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-0.2877, sd = 1.2002)) +
+  labs(title = "Odds Ratio 4", x = "log(odds ratio)")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+```{r}
+set.seed(1)
+### Fixed totals:
+## Bayes Prior: alpha = 1
+alpha = 1
+
+bay.tot.d = rdirichlet(N, as.vector(t(alpha + obs)))
+
+bay.tot.d.OR1 = bay.tot.d[,1]*bay.tot.d[,5]/(bay.tot.d[,2]*bay.tot.d[,4])
+bay.tot.d.OR2 = bay.tot.d[,1]*bay.tot.d[,6]/(bay.tot.d[,3]*bay.tot.d[,4])
+bay.tot.d.OR3 = bay.tot.d[,1]*bay.tot.d[,8]/(bay.tot.d[,2]*bay.tot.d[,7])
+bay.tot.d.OR4 = bay.tot.d[,1]*bay.tot.d[,9]/(bay.tot.d[,3]*bay.tot.d[,7])
+
+mean(bay.tot.d.OR1)
+mean(bay.tot.d.OR2)
+mean(bay.tot.d.OR3)
+mean(bay.tot.d.OR4)
+
+# exp(mean(log(bay.tot.d.OR1)))
+# exp(mean(log(bay.tot.d.OR2)))
+# exp(mean(log(bay.tot.d.OR3)))
+# exp(mean(log(bay.tot.d.OR4)))
+
+mean(log(bay.tot.d.OR1))
+mean(log(bay.tot.d.OR2))
+mean(log(bay.tot.d.OR3))
+mean(log(bay.tot.d.OR4))
+
+sd(log(bay.tot.d.OR1))
+sd(log(bay.tot.d.OR2))
+sd(log(bay.tot.d.OR3))
+sd(log(bay.tot.d.OR4))
+
+mean(log(bay.tot.d.OR1))/sd(log(bay.tot.d.OR1))
+mean(log(bay.tot.d.OR2))/sd(log(bay.tot.d.OR2))
+mean(log(bay.tot.d.OR3))/sd(log(bay.tot.d.OR3))
+mean(log(bay.tot.d.OR4))/sd(log(bay.tot.d.OR4))
+
+quantile(log(bay.tot.d.OR1), c(.025, .975))
+quantile(log(bay.tot.d.OR2), c(.025, .975))
+quantile(log(bay.tot.d.OR3), c(.025, .975))
+quantile(log(bay.tot.d.OR4), c(.025, .975))
+
+data = data.frame(log.OR1 = log(bay.tot.d.OR1), 
+                  log.OR2 = log(bay.tot.d.OR2),
+                  log.OR3 = log(bay.tot.d.OR3), 
+                  log.OR4 = log(bay.tot.d.OR4))
+
+p1 = ggplot(data, aes(x=log.OR1)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=0.2412, sd = 0.9858)) +
+  labs(title = "Odds Ratio 1", x = "log(odds ratio)")
+p2 = ggplot(data, aes(x=log.OR2)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=1.2528, sd = 1.0635)) +
+  labs(title = "Odds Ratio 2", x = "log(odds ratio)")
+p3 = ggplot(data, aes(x=log.OR3)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-1.2993, sd = 1.1320)) +
+  labs(title = "Odds Ratio 3", x = "log(odds ratio)")
+p4 = ggplot(data, aes(x=log.OR4)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-0.2877, sd = 1.2002)) +
+  labs(title = "Odds Ratio 4", x = "log(odds ratio)")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+
+
+```{r}
+set.seed(1)
+### Fixed Row totals:
+## Haldane Prior: alpha = 0
+
+hal.row.d1 = rdirichlet(N, t(obs[1,]))
+hal.row.d2 = rdirichlet(N, t(obs[2,]))
+hal.row.d3 = rdirichlet(N, t(obs[3,]))
+
+hal.row.d.OR1 = hal.row.d1[,1]*hal.row.d2[,2]/(hal.row.d1[,2]*hal.row.d2[,1])
+hal.row.d.OR2 = hal.row.d1[,1]*hal.row.d2[,3]/(hal.row.d1[,3]*hal.row.d2[,1])
+hal.row.d.OR3 = hal.row.d1[,1]*hal.row.d3[,2]/(hal.row.d1[,2]*hal.row.d3[,1])
+hal.row.d.OR4 = hal.row.d1[,1]*hal.row.d3[,3]/(hal.row.d1[,3]*hal.row.d3[,1])
+
+mean(hal.row.d.OR1)
+mean(hal.row.d.OR2)
+mean(hal.row.d.OR3)
+mean(hal.row.d.OR4)
+
+# exp(mean(log(hal.row.d.OR1)))
+# exp(mean(log(hal.row.d.OR2)))
+# exp(mean(log(hal.row.d.OR3)))
+# exp(mean(log(hal.row.d.OR4)))
+
+mean(log(hal.row.d.OR1))
+mean(log(hal.row.d.OR2))
+mean(log(hal.row.d.OR3))
+mean(log(hal.row.d.OR4))
+
+sd(log(hal.row.d.OR1))
+sd(log(hal.row.d.OR2))
+sd(log(hal.row.d.OR3))
+sd(log(hal.row.d.OR4))
+
+mean(log(hal.row.d.OR1))/sd(log(hal.row.d.OR1))
+mean(log(hal.row.d.OR2))/sd(log(hal.row.d.OR2))
+mean(log(hal.row.d.OR3))/sd(log(hal.row.d.OR3))
+mean(log(hal.row.d.OR4))/sd(log(hal.row.d.OR4))
+
+quantile(log(hal.row.d.OR1), c(.025, .975))
+quantile(log(hal.row.d.OR2), c(.025, .975))
+quantile(log(hal.row.d.OR3), c(.025, .975))
+quantile(log(hal.row.d.OR4), c(.025, .975))
+
+data = data.frame(log.OR1 = log(hal.row.d.OR1), 
+                  log.OR2 = log(hal.row.d.OR2),
+                  log.OR3 = log(hal.row.d.OR3), 
+                  log.OR4 = log(hal.row.d.OR4))
+
+p1 = ggplot(data, aes(x=log.OR1)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=0.2412, sd = 0.9858)) +
+  labs(title = "Odds Ratio 1", x = "log(odds ratio)")
+p2 = ggplot(data, aes(x=log.OR2)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=1.2528, sd = 1.0635)) +
+  labs(title = "Odds Ratio 2", x = "log(odds ratio)")
+p3 = ggplot(data, aes(x=log.OR3)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-1.2993, sd = 1.1320)) +
+  labs(title = "Odds Ratio 3", x = "log(odds ratio)")
+p4 = ggplot(data, aes(x=log.OR4)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-0.2877, sd = 1.2002)) +
+  labs(title = "Odds Ratio 4", x = "log(odds ratio)")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+
+```{r}
+set.seed(1)
+### Fixed Row totals:
+## Bayes Prior: alpha = 1
+alpha = 1
+
+bay.row.d1 = rdirichlet(N, t(alpha + obs[1,]))
+bay.row.d2 = rdirichlet(N, t(alpha + obs[2,]))
+bay.row.d3 = rdirichlet(N, t(alpha + obs[3,]))
+
+bay.row.d.OR1 = bay.row.d1[,1]*bay.row.d2[,2]/(bay.row.d1[,2]*bay.row.d2[,1])
+bay.row.d.OR2 = bay.row.d1[,1]*bay.row.d2[,3]/(bay.row.d1[,3]*bay.row.d2[,1])
+bay.row.d.OR3 = bay.row.d1[,1]*bay.row.d3[,2]/(bay.row.d1[,2]*bay.row.d3[,1])
+bay.row.d.OR4 = bay.row.d1[,1]*bay.row.d3[,3]/(bay.row.d1[,3]*bay.row.d3[,1])
+
+mean(bay.row.d.OR1)
+mean(bay.row.d.OR2)
+mean(bay.row.d.OR3)
+mean(bay.row.d.OR4)
+
+# exp(mean(log(bay.row.d.OR1)))
+# exp(mean(log(bay.row.d.OR2)))
+# exp(mean(log(bay.row.d.OR3)))
+# exp(mean(log(bay.row.d.OR4)))
+
+mean(log(bay.row.d.OR1))
+mean(log(bay.row.d.OR2))
+mean(log(bay.row.d.OR3))
+mean(log(bay.row.d.OR4))
+
+sd(log(bay.row.d.OR1))
+sd(log(bay.row.d.OR2))
+sd(log(bay.row.d.OR3))
+sd(log(bay.row.d.OR4))
+
+mean(log(bay.row.d.OR1))/sd(log(bay.row.d.OR1))
+mean(log(bay.row.d.OR2))/sd(log(bay.row.d.OR2))
+mean(log(bay.row.d.OR3))/sd(log(bay.row.d.OR3))
+mean(log(bay.row.d.OR4))/sd(log(bay.row.d.OR4))
+
+quantile(log(bay.row.d.OR1), c(.025, .975))
+quantile(log(bay.row.d.OR2), c(.025, .975))
+quantile(log(bay.row.d.OR3), c(.025, .975))
+quantile(log(bay.row.d.OR4), c(.025, .975))
+
+data = data.frame(log.OR1 = log(bay.row.d.OR1), 
+                  log.OR2 = log(bay.row.d.OR2),
+                  log.OR3 = log(bay.row.d.OR3), 
+                  log.OR4 = log(bay.row.d.OR4))
+
+p1 = ggplot(data, aes(x=log.OR1)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=0.2412, sd = 0.9858)) +
+  labs(title = "Odds Ratio 1", x = "log(odds ratio)")
+p2 = ggplot(data, aes(x=log.OR2)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=1.2528, sd = 1.0635)) +
+  labs(title = "Odds Ratio 2", x = "log(odds ratio)")
+p3 = ggplot(data, aes(x=log.OR3)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-1.2993, sd = 1.1320)) +
+  labs(title = "Odds Ratio 3", x = "log(odds ratio)")
+p4 = ggplot(data, aes(x=log.OR4)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-0.2877, sd = 1.2002)) +
+  labs(title = "Odds Ratio 4", x = "log(odds ratio)")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+
+
+```{r}
+set.seed(1)
+### Fixed Column totals:
+## Haldane Prior: alpha = 0
+
+hal.col.d1 = rdirichlet(N, obs[,1])
+hal.col.d2 = rdirichlet(N, obs[,2])
+hal.col.d3 = rdirichlet(N, obs[,3])
+
+hal.col.d.OR1 = hal.col.d1[,1]*hal.col.d2[,2]/(hal.col.d2[,1]*hal.col.d1[,2])
+hal.col.d.OR2 = hal.col.d1[,1]*hal.col.d3[,2]/(hal.col.d3[,1]*hal.col.d1[,2])
+hal.col.d.OR3 = hal.col.d1[,1]*hal.col.d2[,3]/(hal.col.d2[,1]*hal.col.d1[,3])
+hal.col.d.OR4 = hal.col.d1[,1]*hal.col.d3[,3]/(hal.col.d3[,1]*hal.col.d1[,3])
+
+mean(hal.col.d.OR1)
+mean(hal.col.d.OR2)
+mean(hal.col.d.OR3)
+mean(hal.col.d.OR4)
+
+# exp(mean(log(hal.col.d.OR1)))
+# exp(mean(log(hal.col.d.OR2)))
+# exp(mean(log(hal.col.d.OR3)))
+# exp(mean(log(hal.col.d.OR4)))
+
+mean(log(hal.col.d.OR1))
+mean(log(hal.col.d.OR2))
+mean(log(hal.col.d.OR3))
+mean(log(hal.col.d.OR4))
+
+sd(log(hal.col.d.OR1))
+sd(log(hal.col.d.OR2))
+sd(log(hal.col.d.OR3))
+sd(log(hal.col.d.OR4))
+
+mean(log(hal.col.d.OR1))/sd(log(hal.col.d.OR1))
+mean(log(hal.col.d.OR2))/sd(log(hal.col.d.OR2))
+mean(log(hal.col.d.OR3))/sd(log(hal.col.d.OR3))
+mean(log(hal.col.d.OR4))/sd(log(hal.col.d.OR4))
+
+quantile(log(hal.col.d.OR1), c(.025, .975))
+quantile(log(hal.col.d.OR2), c(.025, .975))
+quantile(log(hal.col.d.OR3), c(.025, .975))
+quantile(log(hal.col.d.OR4), c(.025, .975))
+
+data = data.frame(log.OR1 = log(hal.col.d.OR1), 
+                  log.OR2 = log(hal.col.d.OR2),
+                  log.OR3 = log(hal.col.d.OR3), 
+                  log.OR4 = log(hal.col.d.OR4))
+
+p1 = ggplot(data, aes(x=log.OR1)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=0.2412, sd = 0.9858)) +
+  labs(title = "Odds Ratio 1", x = "log(odds ratio)")
+p2 = ggplot(data, aes(x=log.OR2)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=1.2528, sd = 1.0635)) +
+  labs(title = "Odds Ratio 2", x = "log(odds ratio)")
+p3 = ggplot(data, aes(x=log.OR3)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-1.2993, sd = 1.1320)) +
+  labs(title = "Odds Ratio 3", x = "log(odds ratio)")
+p4 = ggplot(data, aes(x=log.OR4)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-0.2877, sd = 1.2002)) +
+  labs(title = "Odds Ratio 4", x = "log(odds ratio)")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
+
+```{r}
+set.seed(1)
+### Fixed Column totals:
+## Bayes Prior: alpha = 1
+alpha = 1
+
+bay.col.d1 = rdirichlet(N, alpha + obs[,1])
+bay.col.d2 = rdirichlet(N, alpha + obs[,2])
+bay.col.d3 = rdirichlet(N, alpha + obs[,3])
+
+bay.col.d.OR1 = bay.col.d1[,1]*bay.col.d2[,2]/(bay.col.d2[,1]*bay.col.d1[,2])
+bay.col.d.OR2 = bay.col.d1[,1]*bay.col.d3[,2]/(bay.col.d3[,1]*bay.col.d1[,2])
+bay.col.d.OR3 = bay.col.d1[,1]*bay.col.d2[,3]/(bay.col.d2[,1]*bay.col.d1[,3])
+bay.col.d.OR4 = bay.col.d1[,1]*bay.col.d3[,3]/(bay.col.d3[,1]*bay.col.d1[,3])
+
+mean(bay.col.d.OR1)
+mean(bay.col.d.OR2)
+mean(bay.col.d.OR3)
+mean(bay.col.d.OR4)
+
+# exp(mean(log(bay.col.d.OR1)))
+# exp(mean(log(bay.col.d.OR2)))
+# exp(mean(log(bay.col.d.OR3)))
+# exp(mean(log(bay.col.d.OR4)))
+
+mean(log(bay.col.d.OR1))
+mean(log(bay.col.d.OR2))
+mean(log(bay.col.d.OR3))
+mean(log(bay.col.d.OR4))
+
+sd(log(bay.col.d.OR1))
+sd(log(bay.col.d.OR2))
+sd(log(bay.col.d.OR3))
+sd(log(bay.col.d.OR4))
+
+mean(log(bay.col.d.OR1))/sd(log(bay.col.d.OR1))
+mean(log(bay.col.d.OR2))/sd(log(bay.col.d.OR2))
+mean(log(bay.col.d.OR3))/sd(log(bay.col.d.OR3))
+mean(log(bay.col.d.OR4))/sd(log(bay.col.d.OR4))
+
+quantile(log(bay.col.d.OR1), c(.025, .975))
+quantile(log(bay.col.d.OR2), c(.025, .975))
+quantile(log(bay.col.d.OR3), c(.025, .975))
+quantile(log(bay.col.d.OR4), c(.025, .975))
+
+data = data.frame(log.OR1 = log(bay.col.d.OR1), 
+                  log.OR2 = log(bay.col.d.OR2),
+                  log.OR3 = log(bay.col.d.OR3), 
+                  log.OR4 = log(bay.col.d.OR4))
+
+p1 = ggplot(data, aes(x=log.OR1)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=0.2412, sd = 0.9858)) +
+  labs(title = "Odds Ratio 1", x = "log(odds ratio)")
+p2 = ggplot(data, aes(x=log.OR2)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=1.2528, sd = 1.0635)) +
+  labs(title = "Odds Ratio 2", x = "log(odds ratio)")
+p3 = ggplot(data, aes(x=log.OR3)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-1.2993, sd = 1.1320)) +
+  labs(title = "Odds Ratio 3", x = "log(odds ratio)")
+p4 = ggplot(data, aes(x=log.OR4)) + 
+  geom_histogram(aes(y=..density..)) +
+  stat_function(fun=dnorm, args = list(mean=-0.2877, sd = 1.2002)) +
+  labs(title = "Odds Ratio 4", x = "log(odds ratio)")
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```

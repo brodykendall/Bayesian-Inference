@@ -1,0 +1,626 @@
+---
+title: "HW2"
+author: "Brody Kendall"
+date: "1/11/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(MASS)
+library(dplyr)
+library(invgamma)
+```
+
+1. 
+
+(a)
+
+```{r}
+length = 50
+which.quadrant = function(pair) {
+  x=pair[1]
+  y=pair[2]
+  if(x > 0 & y >= 0) {
+    return(1)
+  }
+  else if(x <= 0 & y > 0) {
+    return(2)
+  }
+  else if(x < 0 & y <= 0) {
+    return(3)
+  }
+  else {
+    return(4)
+  }
+}
+set.seed(1)
+
+
+n=10000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  x[i,] = x[i-1,] + rnorm(n, 0, 1)
+  y[i,] = y[i-1,] + rnorm(n, 0, 1)
+}
+data = data.frame(x=x[,1], y=y[,1])
+ggplot(data, aes(x = x, y = y)) + geom_path() + geom_point()
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+
+n=100000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  x[i,] = x[i-1,] + rnorm(n, 0, 1)
+  y[i,] = y[i-1,] + rnorm(n, 0, 1)
+}
+data = data.frame(x=x[,1], y=y[,1])
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+
+n=1000000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  x[i,] = x[i-1,] + rnorm(n, 0, 1)
+  y[i,] = y[i-1,] + rnorm(n, 0, 1)
+}
+data = data.frame(x=x[,1], y=y[,1])
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+```
+
+(b)
+
+```{r}
+length = 500
+set.seed(1)
+
+
+
+n=10000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  x[i,] = x[i-1,] + rnorm(n, 0, 1)
+  y[i,] = y[i-1,] + rnorm(n, 0, 1)
+}
+data = data.frame(x=x[,1], y=y[,1])
+ggplot(data, aes(x = x, y = y)) + geom_path() + geom_point()
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+n=100000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  x[i,] = x[i-1,] + rnorm(n, 0, 1)
+  y[i,] = y[i-1,] + rnorm(n, 0, 1)
+}
+data = data.frame(x=x[,1], y=y[,1])
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+## Due to computing limitations, we do not perform this calculation for n=1,000,000
+```
+
+(c)
+
+```{r}
+length = 50
+set.seed(1)
+
+
+
+n=10000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  step = runif(n, 0, 1)
+  right.indices = which(step < 0.25)
+  left.indices = which(step < 0.5 & step >= 0.25)
+  up.indices = which(step < 0.75 & step >= 0.5)
+  down.indices = which(step >= 0.75)
+  x[i, right.indices] = x[i-1, right.indices] + 1
+  y[i, right.indices] = y[i-1, right.indices]
+
+  x[i, left.indices] = x[i-1, left.indices] - 1
+  y[i, left.indices] = y[i-1, left.indices]
+
+  y[i, up.indices] = y[i-1, up.indices] + 1
+  x[i, up.indices] = x[i-1, up.indices]
+
+  y[i, down.indices] = y[i-1, down.indices] - 1
+  x[i, down.indices] = x[i-1, down.indices]
+}
+data = data.frame(x=x[,1], y=y[,1])
+ggplot(data, aes(x = x, y = y)) + geom_path() + geom_point()
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+
+n=100000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  step = runif(n, 0, 1)
+  right.indices = which(step < 0.25)
+  left.indices = which(step < 0.5 & step >= 0.25)
+  up.indices = which(step < 0.75 & step >= 0.5)
+  down.indices = which(step >= 0.75)
+  x[i, right.indices] = x[i-1, right.indices] + 1
+  y[i, right.indices] = y[i-1, right.indices]
+
+  x[i, left.indices] = x[i-1, left.indices] - 1
+  y[i, left.indices] = y[i-1, left.indices]
+
+  y[i, up.indices] = y[i-1, up.indices] + 1
+  x[i, up.indices] = x[i-1, up.indices]
+
+  y[i, down.indices] = y[i-1, down.indices] - 1
+  x[i, down.indices] = x[i-1, down.indices]
+}
+data = data.frame(x=x[,1], y=y[,1])
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+n=1000000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  step = runif(n, 0, 1)
+  right.indices = which(step < 0.25)
+  left.indices = which(step < 0.5 & step >= 0.25)
+  up.indices = which(step < 0.75 & step >= 0.5)
+  down.indices = which(step >= 0.75)
+  x[i, right.indices] = x[i-1, right.indices] + 1
+  y[i, right.indices] = y[i-1, right.indices]
+
+  x[i, left.indices] = x[i-1, left.indices] - 1
+  y[i, left.indices] = y[i-1, left.indices]
+
+  y[i, up.indices] = y[i-1, up.indices] + 1
+  x[i, up.indices] = x[i-1, up.indices]
+
+  y[i, down.indices] = y[i-1, down.indices] - 1
+  x[i, down.indices] = x[i-1, down.indices]
+}
+data = data.frame(x=x[,1], y=y[,1])
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+```
+
+```{r}
+length = 500
+set.seed(1)
+
+
+n=10000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  step = runif(n, 0, 1)
+  right.indices = which(step < 0.25)
+  left.indices = which(step < 0.5 & step >= 0.25)
+  up.indices = which(step < 0.75 & step >= 0.5)
+  down.indices = which(step >= 0.75)
+  x[i, right.indices] = x[i-1, right.indices] + 1
+  y[i, right.indices] = y[i-1, right.indices]
+
+  x[i, left.indices] = x[i-1, left.indices] - 1
+  y[i, left.indices] = y[i-1, left.indices]
+
+  y[i, up.indices] = y[i-1, up.indices] + 1
+  x[i, up.indices] = x[i-1, up.indices]
+
+  y[i, down.indices] = y[i-1, down.indices] - 1
+  x[i, down.indices] = x[i-1, down.indices]
+}
+data = data.frame(x=x[,1], y=y[,1])
+ggplot(data, aes(x = x, y = y)) + geom_path() + geom_point()
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+
+n=100000
+x = matrix(nrow=length, ncol=n)
+y = matrix(nrow=length, ncol=n)
+x[1,] = 0
+y[1,] = 0
+for(i in 2:length) {
+  step = runif(n, 0, 1)
+  right.indices = which(step < 0.25)
+  left.indices = which(step < 0.5 & step >= 0.25)
+  up.indices = which(step < 0.75 & step >= 0.5)
+  down.indices = which(step >= 0.75)
+  x[i, right.indices] = x[i-1, right.indices] + 1
+  y[i, right.indices] = y[i-1, right.indices]
+
+  x[i, left.indices] = x[i-1, left.indices] - 1
+  y[i, left.indices] = y[i-1, left.indices]
+
+  y[i, up.indices] = y[i-1, up.indices] + 1
+  x[i, up.indices] = x[i-1, up.indices]
+
+  y[i, down.indices] = y[i-1, down.indices] - 1
+  x[i, down.indices] = x[i-1, down.indices]
+}
+data = data.frame(x=x[,1], y=y[,1])
+final.pairs = data.frame(x=x[length,], y=y[length,])
+quadrant = as.factor(apply(final.pairs, 1, which.quadrant))
+(proportions = summary(quadrant)/n)
+chisq.test(summary(quadrant))
+
+
+## Due to computing limitations, we do not perform this calculation for n=1,000,000
+```
+
+
+
+2. 
+
+```{r}
+## Binomial(14, 0.9)
+n=10000
+x = rbinom(n, 14, 0.9)
+mean(x)
+sd(x)
+xpoints=4:14
+ypoints=dbinom(xpoints, 14, 0.9)*3
+data = data.frame(x)
+data2 = data.frame(x=xpoints, y=ypoints)
+
+ggplot() +
+  geom_histogram(data=data, aes(x, y=stat(density))) +
+  geom_point(data=data2, aes(x,y), color="blue")
+
+
+n=100000
+x = rbinom(n, 14, 0.9)
+mean(x)
+sd(x)
+
+
+n=1000000
+x = rbinom(n, 14, 0.9)
+mean(x)
+sd(x)
+
+## Beta(0.5, 0.5)
+n=10000
+x=rbeta(n, .5, .5)
+mean(x)
+sd(x)
+data = data.frame(x=x)
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(binwidth = .1) +
+  stat_function(fun = dbeta, args=list(shape1 = .5, shape2= .5))
+
+n=100000
+x=rbeta(n, .5, .5)
+mean(x)
+sd(x)
+
+n=1000000
+x=rbeta(n, .5, .5)
+mean(x)
+sd(x)
+
+
+
+## Gamma(12, 2)
+n=10000
+x=rgamma(n, 12, 2)
+mean(x)
+sd(x)
+data = data.frame(x=x)
+ggplot(data, aes(x=x)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dgamma, args=list(shape=12, rate=2))
+
+n=100000
+x=rgamma(n, 12, 2)
+mean(x)
+sd(x)
+
+n=1000000
+x=rgamma(n, 12, 2)
+mean(x)
+sd(x)
+
+
+## IG(12, 2)
+n=10000
+x=rinvgamma(n, 12, 2)
+mean(x)
+sd(x)
+data = data.frame(x=x)
+ggplot(data, aes(x=x)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dinvgamma, args=list(shape=12, rate=2))
+
+n=100000
+x=rinvgamma(n, 12, 2)
+mean(x)
+sd(x)
+
+n=100000
+x=rinvgamma(n, 12, 2)
+mean(x)
+sd(x)
+
+
+
+
+## chi-sq(2)
+n=10000
+x=rchisq(n, 2)
+mean(x)
+sd(x)
+data = data.frame(x=x)
+ggplot(data, aes(x=x)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dchisq, args=list(df=2))
+
+n=100000
+x=rchisq(n, 2)
+mean(x)
+sd(x)
+
+n=100000
+x=rchisq(n, 2)
+mean(x)
+sd(x)
+
+
+
+## Inverse chi-sq(2)
+n=10000
+x=rinvchisq(n, 2)
+mean(x)
+sd(x)
+data = data.frame(x=x)
+ggplot(data, aes(x=x)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dinvchisq, args=list(df=2))
+
+n=100000
+x=rinvchisq(n, 2)
+mean(x)
+sd(x)
+
+n=1000000
+x=rinvchisq(n, 2)
+mean(x)
+sd(x)
+```
+
+
+
+3. 
+
+(a)
+
+```{r}
+mu = c(0,0,0)
+vcov = matrix(c(1, 4.5, 9, 4.5, 25, 49, 9, 49, 100), nrow=3,ncol=3)
+set.seed(1)
+
+n=10000
+x.n1 = mvrnorm(n, mu, vcov)
+
+n=100000
+x.n2 = mvrnorm(n, mu, vcov)
+
+n=1000000
+x.n3 = mvrnorm(n, mu, vcov)
+```
+
+(b)
+
+```{r}
+data.n1 = data.frame(x.n1)
+ggplot(data.n1, aes(x=X1)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dnorm, args=list(mean=0, sd=1))
+mean(x.n1[,1])
+sd(x.n1[,1])
+
+data.n2 = data.frame(x.n2)
+ggplot(data.n2, aes(x=X1)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dnorm, args=list(mean=0, sd=1))
+mean(x.n2[,1])
+sd(x.n2[,1])
+
+data.n3 = data.frame(x.n3)
+ggplot(data.n3, aes(x=X1)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dnorm, args=list(mean=0, sd=1))
+mean(x.n3[,1])
+sd(x.n3[,1])
+```
+
+(c)
+
+```{r}
+n=10000
+x.c.n1=rnorm(n, 3/22, sqrt(2/11))
+mean(x.c.n1)
+sd(x.c.n1)
+data.c.n1 = data.frame(x.c.n1)
+ggplot(data.c.n1, aes(x=x.c.n1)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dnorm, args=list(mean=3/22, sd=sqrt(2/11)))
+
+n=100000
+x.c.n2=rnorm(n, 3/22, sqrt(2/11))
+mean(x.c.n2)
+sd(x.c.n2)
+data.c.n2 = data.frame(x.c.n2)
+ggplot(data.c.n2, aes(x=x.c.n2)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dnorm, args=list(mean=3/22, sd=sqrt(2/11)))
+
+n=1000000
+x.c.n3=rnorm(n, 3/22, sqrt(2/11))
+mean(x.c.n3)
+sd(x.c.n3)
+data.c.n3 = data.frame(x.c.n3)
+ggplot(data.c.n3, aes(x=x.c.n3)) +
+  geom_histogram(aes(y=stat(density))) +
+  stat_function(fun=dnorm, args=list(mean=3/22, sd=sqrt(2/11)))
+```
+
+
+(d)
+
+```{r}
+epsilon=5
+data.n1.e1 = data.n1 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n1.e1$X1)
+sd(data.n1.e1$X1)
+
+epsilon=2
+data.n1.e2 = data.n1 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n1.e2$X1)
+sd(data.n1.e2$X1)
+
+epsilon=1
+data.n1.e3 = data.n1 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n1.e3$X1)
+sd(data.n1.e3$X1)
+
+epsilon=.5
+data.n1.e4 = data.n1 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n1.e4$X1)
+sd(data.n1.e4$X1)
+
+epsilon=.1
+data.n1.e5 = data.n1 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n1.e5$X1)
+sd(data.n1.e5$X1)
+
+
+###n=100,000 (n2)
+epsilon=5
+data.n2.e1 = data.n2 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n2.e1$X1)
+sd(data.n2.e1$X1)
+
+epsilon=2
+data.n2.e2 = data.n2 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n2.e2$X1)
+sd(data.n2.e2$X1)
+
+epsilon=1
+data.n2.e3 = data.n2 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n2.e3$X1)
+sd(data.n2.e3$X1)
+
+epsilon=.5
+data.n2.e4 = data.n2 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n2.e4$X1)
+sd(data.n2.e4$X1)
+
+epsilon=.1
+data.n2.e5 = data.n2 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n2.e5$X1)
+sd(data.n2.e5$X1)
+
+
+###n=1,000,000 (n3)
+epsilon=5
+data.n3.e1 = data.n3 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n3.e1$X1)
+sd(data.n3.e1$X1)
+
+epsilon=2
+data.n3.e2 = data.n3 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n3.e2$X1)
+sd(data.n3.e2$X1)
+
+epsilon=1
+data.n3.e3 = data.n3 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n3.e3$X1)
+sd(data.n3.e3$X1)
+
+epsilon=.5
+data.n3.e4 = data.n3 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n3.e4$X1)
+sd(data.n3.e4$X1)
+
+epsilon=.1
+data.n3.e5 = data.n3 %>%
+  filter(abs(X2 - 1) < epsilon & abs(X3 - 1) < epsilon)
+mean(data.n3.e5$X1)
+sd(data.n3.e5$X1)
+
+```
+

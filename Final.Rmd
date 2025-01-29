@@ -1,0 +1,894 @@
+---
+title: "Final"
+author: "Brody Kendall"
+date: "3/3/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(invgamma)
+library(stableGR)
+```
+
+
+1.
+
+(a)
+
+```{r}
+set.seed(1)
+N = 10000
+burn.in = 1:(N/10)
+theta = matrix(nrow = N, ncol=5)
+z = matrix(nrow = N, ncol=5)
+
+plots = list()
+
+for(j in 1:5) {
+  theta[1,j] = runif(1, 0 ,1)
+  z[1,j] = rbinom(1, 125, theta[1,j]/(theta[1,j] + 2))
+  
+  for(i in 2:N) {
+    theta[i,j] = rbeta(1, z[i-1,j] + 35, 39)
+    z[i,j] = rbinom(1, 125, theta[i,j]/(theta[i,j] + 2))
+  }
+}
+
+data = data.frame(theta = theta, x=1:N)
+ggplot(data, aes(y=theta.1, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 1", x = "Iteration")
+ggplot(data, aes(y=theta.2, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 2", x = "Iteration")
+ggplot(data, aes(y=theta.3, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 3", x = "Iteration")
+ggplot(data, aes(y=theta.4, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 4", x = "Iteration")
+ggplot(data, aes(y=theta.5, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 5", x = "Iteration")
+
+theta.concat = c(theta[-burn.in,])
+mean(theta.concat)
+var(theta.concat)
+
+data = data.frame(theta.concat = theta.concat)
+
+L.1 = function(t) {
+  (2+t)^125*(1-t)^38*(t)^34
+}
+C.1 = 1/integrate(L.1, 0, 1)$value
+L2.1 = function(t) {
+  C.1*L.1(t)
+}
+
+Lnorm.1 = function(t) {
+  C.1*L.1(t)/(integrate(L2.1, 0, 1)$value)
+}
+
+ggplot(data, aes(x=theta.concat)) + 
+  geom_density(aes(color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.1, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Observed Posterior and Normalized Likelihood", x = "theta")
+
+GR = list(matrix(c(theta[,1], z[,1]), ncol=2), matrix(c(theta[,2], z[,2]), ncol=2), matrix(c(theta[,3], z[,3]), ncol=2), matrix(c(theta[,4], z[,4]), ncol=2), matrix(c(theta[,5], z[,5]), ncol=2))
+stable.GR(GR)
+```
+
+(b)
+
+```{r}
+set.seed(1)
+N = 10000
+burn.in = 1:(N/10)
+theta = matrix(nrow = N, ncol=5)
+z = matrix(nrow = N, ncol=5)
+
+for(j in 1:5) {
+  theta[1,j] = runif(1, 0 ,1)
+  z[1,j] = rbinom(1, 14, theta[1,j]/(theta[1,j] + 2))
+  
+  for(i in 2:N) {
+    theta[i,j] = rbeta(1, z[i-1,j] + 6, 2)
+    z[i,j] = rbinom(1, 14, theta[i,j]/(theta[i,j] + 2))
+  }
+}
+
+data = data.frame(theta = theta, x=1:N)
+ggplot(data, aes(y=theta.1, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 1", x = "Iteration")
+ggplot(data, aes(y=theta.2, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 2", x = "Iteration")
+ggplot(data, aes(y=theta.3, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 3", x = "Iteration")
+ggplot(data, aes(y=theta.4, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 4", x = "Iteration")
+ggplot(data, aes(y=theta.5, x=x)) + 
+  geom_line() +
+  labs(title = "Chain 5", x = "Iteration")
+
+theta.concat = c(theta[-burn.in,])
+mean(theta.concat)
+var(theta.concat)
+
+data = data.frame(theta.concat = theta.concat)
+
+L.2 = function(t) {
+  (2+t)^14*(1-t)*(t)^5
+}
+C.2 = 1/integrate(L.2, 0, 1)$value
+L2.2 = function(t) {
+  C.2*L.2(t)
+}
+
+Lnorm.2 = function(t) {
+  C.2*L.2(t)/(integrate(L2.2, 0, 1)$value)
+}
+
+ggplot(data, aes(x=theta.concat)) + 
+  geom_density(aes(color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.2, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Observed Posterior and Normalized Likelihood", x = "theta")
+
+GR = list(matrix(c(theta[,1], z[,1]), ncol=2), matrix(c(theta[,2], z[,2]), ncol=2), matrix(c(theta[,3], z[,3]), ncol=2), matrix(c(theta[,4], z[,4]), ncol=2), matrix(c(theta[,5], z[,5]), ncol=2))
+stable.GR(GR)
+```
+
+2.
+
+(a)
+
+```{r}
+N = 10000
+R = function(y,x) {
+  ((2+y)^125*(1-y)^38*y^34)/((2+x)^125*(1-x)^38*x^34)
+}
+burn.in = 1:(N/10)
+```
+
+
+```{r}
+## (1) Uniform(0,1)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = runif(1, 0, 1)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.1, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Uniform(0,1) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (2) Normal(x, 0.01)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, x[i-1], 0.01)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.1, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(x, 0.01) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (3) Normal(x, 0.1)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, x[i-1], 0.1)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.1, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(x, 0.1) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (4) Normal(x, 0.5)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, x[i-1], 0.5)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.1, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(x, 0.5) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (5) Normal(0.4, 0.1)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, 0.4, 0.1)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.1, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(0.4, 0.1) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+
+(b)
+
+```{r}
+N = 10000
+R = function(y,x) {
+  ((2+y)^14*(1-y)*y^5)/((2+x)^14*(1-x)*x^5)
+}
+burn.in = 1:(N/10)
+```
+
+
+```{r}
+## (1) Uniform(0,1)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = runif(1, 0, 1)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.2, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Uniform(0,1) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (2) Normal(x, 0.01)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, x[i-1], 0.01)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.2, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(x, 0.01) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (3) Normal(x, 0.1)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, x[i-1], 0.1)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.2, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(x, 0.1) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (4) Normal(x, 0.5)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, x[i-1], 0.5)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.2, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(x, 0.5) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+```{r}
+## (5) Normal(0.4, 0.1)
+set.seed(1)
+x = numeric(N)
+x[1] = runif(1, 0, 1)
+
+acc = 0
+for(i in 2:N) {
+  y = rnorm(1, 0.4, 0.1)
+  if(y < 0 | y > 1) {
+    x[i] = x[i-1]
+  }
+  else {
+    if(R(y, x[i-1]) > 1) {
+      x[i] = y
+      acc = acc + 1
+    }
+    else {
+      if(rbinom(1, 1, R(y, x[i-1])) == 1) {
+        x[i] = y
+        acc = acc + 1
+      }
+      else {
+        x[i] = x[i-1]
+      }
+    }
+  }
+}
+
+data = data.frame(x = x, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+    geom_line()
+
+data = data.frame(x = x[-burn.in])
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = 'Estimated Observed Posterior')) + 
+  stat_function(fun = Lnorm.2, aes(color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Normal(0.4, 0.1) Driver", x = "theta")
+
+mean(x[-burn.in])
+sd(x[-burn.in])
+acc/N
+```
+
+
+3.
+
+(b)
+
+```{r}
+set.seed(1)
+N = 75000
+mu0 = 0
+sigsq0 = 10^12
+a1 = 1
+b1 = 1
+a2 = 0
+b2 = 0
+
+Y = data.frame(x1 = c(7.298, 5.22, 0.11, 2.212, 0.282, 1.722), x2 = c(3.846, 6.556, 10.386, 4.852, 9.014, 4.782), x3 = c(2.434, 0.608, 13.434, 7.092, 4.458, 8.106), x4 = c(9.566, 11.788, 5.51, 9.288, 9.446, 0.758), x5 = c(7.99, -0.892, 8.166, 4.98, 7.198, 3.758))
+K=5
+J=6
+
+mu = numeric(N)
+theta = matrix(nrow = N, ncol = 5)
+sigsqe = numeric(N)
+sigsqt = numeric(N)
+
+mu[1] = rnorm(1, mu0, sqrt(sigsq0))
+sigsqt[1] = rinvgamma(1, a1, b1)
+sigsqe[1] = runif(1, 0, 10)
+theta[1,] = runif(5, -1, 12)
+
+for(i in 2:N) {
+  mu[i] = rnorm(1, (sigsqt[i-1]*mu0 + sigsq0*sum(theta[i-1,]))/(sigsqt[i-1] + K*sigsq0), sqrt((sigsqt[i-1]*sigsq0)/(sigsqt[i-1] + K*sigsq0)))
+  for(j in 1:K) {
+    theta[i,j] = rnorm(1, ((J*sigsqt[i-1])/(J*sigsqt[i-1] + sigsqe[i-1]))*mean(Y[,j]) + ((sigsqe[i-1])/(J*sigsqt[i-1] + sigsqe[i-1]))*mu[i], sqrt((sigsqt[i-1]*sigsqe[i-1])/(J*sigsqt[i-1] + sigsqe[i-1])))
+  }
+  sigsqe[i] = rinvgamma(1, a2 + K*J/2, b2 + .5*sum((Y - theta[i,])^2))
+  sigsqt[i] = rinvgamma(1, a1 + K/2, b1 + .5*sum((theta[i,] - mu[i])^2))
+}
+
+burn.in = 1:(N/10)
+mean(mu[-burn.in])
+var(mu[-burn.in])
+
+data = data.frame(theta = theta, sige = sqrt(sigsqe), sigt = sqrt(sigsqt),  x=1:N)
+ggplot(data, aes(y=theta.1, x=x)) + 
+  geom_line() +
+  labs(title = "Theta1", x = "Iteration")
+mean(theta[-burn.in,1])
+var(theta[-burn.in,1])
+ggplot(data, aes(y=theta.2, x=x)) + 
+  geom_line() +
+  labs(title = "Theta2", x = "Iteration")
+mean(theta[-burn.in,2])
+var(theta[-burn.in,2])
+ggplot(data, aes(y=theta.3, x=x)) + 
+  geom_line() +
+  labs(title = "Theta3", x = "Iteration")
+mean(theta[-burn.in,3])
+var(theta[-burn.in,3])
+ggplot(data, aes(y=theta.4, x=x)) + 
+  geom_line() +
+  labs(title = "Theta4", x = "Iteration")
+mean(theta[-burn.in,4])
+var(theta[-burn.in,4])
+ggplot(data, aes(y=theta.5, x=x)) + 
+  geom_line() +
+  labs(title = "Theta5", x = "Iteration")
+mean(theta[-burn.in,5])
+var(theta[-burn.in,5])
+ggplot(data, aes(y=sige, x=x)) +
+  geom_line() +
+  labs(title = "Sigma Epsilon", x = "Iteration")
+mean(sigsqe[-burn.in])
+var(sigsqe[-burn.in])
+ggplot(data, aes(y=sigt, x=x)) + 
+  geom_line() +
+  labs(title = "Sigma Theta", x = "Iteration")
+mean(sigsqt[-burn.in])
+var(sigsqt[-burn.in])
+
+```
+
+(c)
+
+```{r}
+set.seed(1)
+N=3000
+mu0 = 0
+sigsq0 = 10^12
+a1 = 0
+b1 = 0
+a2 = 0
+b2 = 0
+
+mu = numeric(N)
+theta = matrix(nrow = N, ncol = 5)
+sigsqe = numeric(N)
+sigsqt = numeric(N)
+
+mu[1] = rnorm(1, mu0, sqrt(sigsq0))
+sigsqt[1] = runif(1, 0, 10)
+sigsqe[1] = runif(1, 0, 10)
+theta[1,] = runif(5, 0, 13)
+
+for(i in 2:N) {
+  mu[i] = rnorm(1, (sigsqt[i-1]*mu0 + sigsq0*sum(theta[i-1,]))/(sigsqt[i-1] + K*sigsq0), sqrt((sigsqt[i-1]*sigsq0)/(sigsqt[i-1] + K*sigsq0)))
+  for(j in 1:K) {
+    theta[i,j] = rnorm(1, ((J*sigsqt[i-1])/(J*sigsqt[i-1] + sigsqe[i-1]))*mean(Y[,j]) + ((sigsqe[i-1])/(J*sigsqt[i-1] + sigsqe[i-1]))*mu[i], sqrt((sigsqt[i-1]*sigsqe[i-1])/(J*sigsqt[i-1] + sigsqe[i-1])))
+  }
+  sigsqe[i] = rinvgamma(1, a2 + K*J/2, b2 + .5*sum((Y - theta[i,])^2))
+  sigsqt[i] = rinvgamma(1, a1 + K/2, b1 + .5*sum((theta[i,] - mu[i])^2))
+}
+
+burn.in = 1:(N/10)
+
+data = data.frame(theta = theta, sige = sqrt(sigsqe), sigt = sqrt(sigsqt),  x=1:N)
+ggplot(data, aes(y=theta.1, x=x)) + 
+  geom_line() +
+  labs(title = "Theta1", x = "Iteration")
+ggplot(data, aes(y=theta.2, x=x)) + 
+  geom_line() +
+  labs(title = "Theta2", x = "Iteration")
+ggplot(data, aes(y=theta.3, x=x)) + 
+  geom_line() +
+  labs(title = "Theta3", x = "Iteration")
+ggplot(data, aes(y=theta.4, x=x)) + 
+  geom_line() +
+  labs(title = "Theta4", x = "Iteration")
+ggplot(data, aes(y=theta.5, x=x)) + 
+  geom_line() +
+  labs(title = "Theta5", x = "Iteration")
+mean(theta[-burn.in,5])
+var(theta[-burn.in,5])
+ggplot(data, aes(y=sige, x=x)) +
+  geom_line() +
+  labs(title = "Sigma Epsilon", x = "Iteration")
+mean(sigsqe[-burn.in])
+var(sigsqe[-burn.in])
+ggplot(data, aes(y=sigt, x=x)) + 
+  geom_line() +
+  labs(title = "Sigma Theta", x = "Iteration")
+mean(sigsqt[-burn.in])
+var(sigsqt[-burn.in])
+```
+
+
+5.
+
+(a)
+
+```{r}
+set.seed(1)
+N = 1000
+x = numeric(N)
+y = numeric(N)
+
+B = 3
+x[1] = runif(1, 0, B)
+y[1] = rexp(1, x[1])
+
+for(i in 2:N) {
+  x.temp = rexp(1, y[i-1])
+  if(x.temp > 0 & x.temp < B) {
+    x[i] = x.temp
+  }
+  else {
+    x[i] = x[i-1]
+  }
+  y.temp = rexp(1, x[i])
+  if(y.temp > 0 & y.temp < B) {
+    y[i] = y.temp
+  }
+  else {
+    y[i] = y[i-1]
+  }
+}
+
+for(i in 2:N) {
+  x.temp = 0
+  while(x.temp <= 0 | x.temp >= B) {
+    x.temp = rexp(1, y[i-1])
+  }
+  x[i] = x.temp
+  
+  y.temp = 0
+  while(y.temp <= 0 | y.temp >= B) {
+    y.temp = rexp(1, x[i])
+  }
+  y[i] = y.temp
+}
+
+data = data.frame(x = x, y = y, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+  geom_line()
+ggplot(data, aes(y=y, x=index)) +
+  geom_line()
+
+burn.in = 1:(N/10)
+
+data = data.frame(x = x[-burn.in], index = (1:N)[-burn.in])
+
+L.1 = function(t) {
+  (1-exp(-B*t))/t
+}
+C.1 = 1/integrate(L.1, 0, B)$value
+L2.1 = function(t) {
+  C.1*L.1(t)
+}
+
+Lnorm.1 = function(t) {
+  C.1*L.1(t)/(integrate(L2.1, 0, B)$value)
+}
+
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density.., color = "Estimated Marginal")) + 
+  stat_function(fun = Lnorm.1, aes(color= "True Marginal")) +
+  scale_color_manual("Legend", values = c("red", "blue")) +
+  labs(title = "Marginal density of x")
+```
+
+(c)
+
+```{r}
+set.seed(1)
+N = 1000
+x = numeric(N)
+y = numeric(N)
+
+x[1] = runif(1, 0, N)
+y[1] = rexp(1, x[1])
+
+for(i in 2:N) {
+  x.temp = rexp(1, y[i-1])
+  if(x.temp > 0) {
+    x[i] = x.temp
+  }
+  else {
+    x[i] = x[i-1]
+  }
+  y.temp = rexp(1, x[i])
+  if(y.temp > 0) {
+    y[i] = y.temp
+  }
+  else {
+    y[i] = y[i-1]
+  }
+}
+
+data = data.frame(x = x, y = y, index = 1:N)
+ggplot(data, aes(y=x, x=index)) + 
+  geom_line()
+ggplot(data, aes(y=y, x=index)) +
+  geom_line()
+
+data = data.frame(x = x[-burn.in], index = (1:N)[-burn.in])
+ggplot(data, aes(x=x)) + 
+  geom_histogram(aes(y=..density..)) +
+  labs(title = "Marginal density of x")
+```
+

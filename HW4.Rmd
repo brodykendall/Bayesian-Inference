@@ -1,0 +1,291 @@
+---
+title: "HW4"
+author: "Brody Kendall"
+date: "2/6/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+library(truncdist)
+```
+
+
+
+3.
+
+(a)
+
+```{r}
+data = data.frame(x = seq(0, 1, .0001))
+
+ggplot(data, mapping = aes(x=x)) +
+  stat_function(fun=dunif, args = list(min=.19, max = .35), aes(color = 'Uniform(.19, .35)')) + 
+  stat_function(fun = dbeta, args = list(shape1 = 10.2, shape2 = 23.8), aes(color = 'Beta(10.2, 23.8)')) + 
+  stat_function(fun = dbeta, args = list(shape1 = 20.4, shape2 = 47.6), aes(color='Beta(20.4, 47.6)')) + 
+  scale_color_manual("Legend", values = c("red", "blue", "green"))
+```
+
+(b)
+
+
+```{r}
+ggplot(data, mapping = aes(x=x)) +
+  stat_function(fun=dunif, args = list(min=.19, max = .35), aes(color = 'Prior')) +
+  stat_function(fun=dbeta, args = list(shape1=6, shape2=36), aes(color = 'Likelihood')) +
+  stat_function(fun=dtrunc, args = list(spec="beta", a=.19, b=.35, shape1=6, shape2 = 36), aes(color = 'Posterior')) +
+  ggtitle("Uniform(.19, .35) Prior")
+
+1-ptrunc(.2, "beta", a=.19, b=.35, shape1=6, shape2=36)
+
+qtrunc(.025, "beta", a=.19, b=.35, shape1=6, shape2=36)
+qtrunc(.975, "beta", a=.19, b=.35, shape1=6, shape2=36)
+
+
+
+ggplot(data, mapping = aes(x=x)) +
+  stat_function(fun = dbeta, args = list(shape1 = 10.2, shape2 = 23.8), aes(color = 'Prior')) +
+  stat_function(fun=dbeta, args = list(shape1=6, shape2=36), aes(color = 'Likelihood')) +
+  stat_function(fun=dbeta, args = list(shape1=15.2, shape2=58.5), aes(color = 'Posterior')) +
+  ggtitle("Beta(10.2, 23.8) Prior")
+  
+1-pbeta(.2, 15.2, 58.5)
+
+qbeta(.025, 15.2, 58.5)
+qbeta(.975, 15.2, 58.5)
+
+
+
+ggplot(data, mapping = aes(x=x)) +
+  stat_function(fun = dbeta, args = list(shape1 = 20.4, shape2 = 47.6), aes(color='Prior')) +
+  stat_function(fun=dbeta, args = list(shape1=6, shape2=36), aes(color = 'Likelihood')) +
+  stat_function(fun=dbeta, args = list(shape1=25.4, shape2=82.6), aes(color = 'Posterior')) +
+  ggtitle("Beta(20.4, 47.6) Prior")
+
+1-pbeta(.2, 25.4, 82.6)
+
+qbeta(.025, 25.4, 82.6)
+qbeta(.975, 25.4, 82.6)
+```
+
+
+4.
+
+```{r}
+y = c(rep(0,6), rep(1,18), rep(2,9), rep(3,7), rep(4,4), 5)
+```
+
+(a)
+
+```{r}
+data = data.frame(x = seq(0, 5, .001))
+
+ggplot(data, mapping = aes(x=x)) +
+  stat_function(fun = dgamma, args = list(shape = 2, rate = 1), aes(color='Prior: Gamma(2,1)')) +
+  stat_function(fun=dgamma, args = list(shape=2+45*mean(y), rate=1 + 45), aes(color = 'Posterior: Gamma(80, 46)')) +
+  annotate("point", x = 1.74, y = dgamma(1.74, 80, 46)) +
+  annotate("text", x = 1.74+.3, y = dgamma(1.74, 80, 46), label = "mean") + 
+  annotate("point", x = 1.717, y = dgamma(1.717, 80, 46), color = "green") +
+  annotate("text", x = 1.717-.3, y = dgamma(1.717, 80, 46), label = "mode", color="green") + 
+  annotate("segment", x=1.73-.194, xend=1.73+.194, y=1.25, yend=1.25, color="purple") + 
+  annotate("text", x=1.74, y=1, label="mean +/- 1 standard deviation", color="purple") + 
+  scale_color_manual("Legend", values = c("red", "blue"))
+
+```
+
+
+(b)
+
+```{r}
+data = data.frame(x = seq(0, 3, .001))
+fun = function(x) {x^(-1/2)}
+data$x2 = data$x^(-1/2)/integrate(fun, 0, 3)$value
+
+ggplot(data, mapping=aes(x=x)) +
+  geom_line(mapping=aes(x=x, y=x2, color = 'Prior: Improper Gamma(1/2, 0)')) + 
+  stat_function(fun=dgamma, args = list(shape=78.5, rate=45), aes(color = 'Posterior: Gamma(78.5, 45)')) + 
+  annotate("point", x = 1.744, y = dgamma(1.744, 78.5, 45)) + 
+  annotate("text", x = 1.744+.3, y = dgamma(1.744, 78.5, 45), label = "mean") +
+  annotate("point", x = 1.722, y = dgamma(1.722, 78.5, 45), color = "green") +
+  annotate("text", x = 1.722-.3, y = dgamma(1.722, 78.5, 45), label = "mode", color="green") +
+  annotate("segment", x=1.735-.197, xend=1.735+.197, y=1.22, yend=1.22, color="purple") +
+  annotate("text", x=1.735, y=1, label="mean +/- 1 standard deviation", color="purple") +
+  scale_color_manual("Legend", values = c("red", "blue"))
+
+```
+
+
+
+
+5.
+
+(c)
+
+```{r}
+first = function(t) {
+  125/(2+t) - 38/(1-t) + 34/t
+}
+second = function(t) {
+  -125/(2+t)^2 - 38/(1-t)^2 - 34/t^2
+}
+
+n=100
+theta = numeric(n)
+theta[1] = .1
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .2
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .3
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .4
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .6
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .8
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+```
+
+
+```{r}
+first = function(t) {
+  14/(2+t) - 1/(1-t) + 5/t
+}
+second = function(t) {
+  -14/(2+t)^2 - 1/(1-t)^2 - 5/t^2
+}
+
+n=100
+theta = numeric(n)
+theta[1] = .1
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .2
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .3
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .4
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .6
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+
+theta = numeric(n)
+theta[1] = .8
+
+for(i in 2:n) {
+  theta[i] = theta[i-1] - second(theta[i-1])^(-1)*first(theta[i-1])
+  if(abs(theta[i]-theta[i-1]) < 10^-9) {
+    break
+  }
+}
+i
+theta[i]
+```

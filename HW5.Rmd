@@ -1,0 +1,214 @@
+---
+title: "HW5"
+author: "Brody Kendall"
+date: "2/12/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(ggplot2)
+```
+
+
+1. 
+
+(a)
+
+```{r}
+# Haldane:
+1-pnorm(0, mean = 1.946, sd = sqrt(1.071))
+
+# Flat:
+1-pnorm(0, mean = 1.609, sd = sqrt(.8))
+
+# Noninformative:
+1-pnorm(0, mean = 1.758, sd = sqrt(0.913))
+```
+
+
+(b)
+
+```{r}
+set.seed(1)
+n=10000
+
+# Haldane:
+x = rbeta(n, 14, 4)
+y = rbeta(n, 2, 4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+# Flat:
+x = rbeta(n, 1+14, 1+4)
+y = rbeta(n, 1+2, 1+4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+# Noninformative:
+x = rbeta(n, 0.5+14, 0.5+4)
+y = rbeta(n, 0.5+2, 0.5+4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+
+n=100000
+
+# Haldane:
+x = rbeta(n, 14, 4)
+y = rbeta(n, 2, 4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+# Flat:
+x = rbeta(n, 1+14, 1+4)
+y = rbeta(n, 1+2, 1+4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+# Noninformative:
+x = rbeta(n, 0.5+14, 0.5+4)
+y = rbeta(n, 0.5+2, 0.5+4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+
+n=1000000
+
+# Haldane:
+x = rbeta(n, 14, 4)
+y = rbeta(n, 2, 4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+# Flat:
+x = rbeta(n, 1+14, 1+4)
+y = rbeta(n, 1+2, 1+4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+
+# Noninformative:
+x = rbeta(n, 0.5+14, 0.5+4)
+y = rbeta(n, 0.5+2, 0.5+4)
+sum(x > y)/n
+sum(log(x/(1-x)) > log(y/(1-y)))/n
+
+```
+
+```{r}
+fisher.test(rbind(c(14,2),c(4,4)),alternative = "greater")$p.value
+```
+
+
+4. 
+
+(a)
+
+```{r}
+thetahat = 0.6268215
+second = function(t) {
+  -125/(2+t)^2 - 38/(1-t)^2 - 34/t^2
+}
+(C = (-second(thetahat))^-1)
+
+L = function(t) {
+  (2+t)^125*(1-t)^38*(t)^34
+}
+C2 = 1/integrate(L, 0, 1)$value
+L2 = function(t) {
+  C2*L(t)
+}
+
+Lnorm = function(t) {
+  C2*L(t)/(integrate(L2, 0, 1)$value)
+}
+
+data = data.frame(x = seq(0, 1, .0001))
+data$x2 = Lnorm(data$x)
+
+ggplot(data, mapping = aes(x=x)) +
+  stat_function(fun=dnorm, args = list(mean=thetahat, sd = sqrt(C)), aes(color = 'Normal Approximation')) + 
+  geom_line(mapping=aes(x=x, y=x2, color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue"))
+```
+
+(b)
+
+```{r}
+thetahat = 0.9034401
+second = function(t) {
+  -14/(2+t)^2 - 1/(1-t)^2 - 5/t^2
+}
+(C = (-second(thetahat))^-1)
+
+L = function(t) {
+  (2+t)^14*(1-t)*(t)^5
+}
+C2 = 1/integrate(L, 0, 1)$value
+L2 = function(t) {
+  C2*L(t)
+}
+
+Lnorm = function(t) {
+  C2*L(t)/(integrate(L2, 0, 1)$value)
+}
+
+data = data.frame(x = seq(0, 1, .0001))
+data$x2 = Lnorm(data$x)
+
+ggplot(data, mapping = aes(x=x, xmax = 1.25)) +
+  stat_function(fun=dnorm, args = list(mean=thetahat, sd = sqrt(C)), aes(color = 'Normal Approximation')) + 
+  geom_line(mapping=aes(x=x, y=x2, color = 'Normalized Likelihood')) +
+  scale_color_manual("Legend", values = c("red", "blue"))
+```
+
+
+
+5. 
+
+(a)
+
+```{r}
+thetahat = 0.6268215
+h = function(theta) {(-1/197)*(125*log(2+theta) + 38*log(1-theta) + 34*log(theta))}
+(exphat = exp(-197*h(thetahat)))
+hsecond = function(theta) {(-1/197)*(-125/(2+theta)^2 - 38/(1-theta)^2 - 34/theta^2)}
+(sigmahat = (hsecond(thetahat))^(-1/2))
+
+thetastar = 0.6309920
+hstar = function(theta) {(-1/197)*(125*log(2+theta) + 38*log(1-theta) + 35*log(theta))}
+(expstar = exp(-197*hstar(thetastar)))
+hstarsecond = function(theta) {(-1/197)*(-125/(2+theta)^2 - 38/(1-theta)^2 - 35/theta^2)}
+(sigmastar = (hstarsecond(thetastar))^(-1/2))
+
+(sigmastar*expstar)/(sigmahat*exphat)
+```
+
+(b)
+
+```{r}
+thetahat = 0.9034401
+h = function(theta) {(-1/20)*(14*log(2+theta) + log(1-theta) + 5*log(theta))}
+(exphat = exp(-20*h(thetahat)))
+hsecond = function(theta) {(-1/20)*(-14/(2+theta)^2 - 1/(1-theta)^2 - 5/theta^2)}
+(sigmahat = (hsecond(thetahat))^(-1/2))
+
+thetastar = 0.9121664
+hstar = function(theta) {(-1/20)*(14*log(2+theta) + log(1-theta) + 6*log(theta))}
+(expstar = exp(-20*hstar(thetastar)))
+hstarsecond = function(theta) {(-1/20)*(-14/(2+theta)^2 - 1/(1-theta)^2 - 6/theta^2)}
+(sigmastar = (hstarsecond(thetastar))^(-1/2))
+
+(sigmastar*expstar)/(sigmahat*exphat)
+```
+

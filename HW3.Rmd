@@ -1,0 +1,107 @@
+---
+title: "HW3"
+author: "Brody Kendall"
+date: "1/27/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(asht)
+```
+
+
+2.
+
+(a)
+
+```{r}
+y = c(49, -67, 8, 16, 6, 23, 28, 41, 14, 29, 56, 24, 75, 60, -48)
+mean(y)
+sd(y)
+t.test(y)
+t.test(y, alternative = "less")
+```
+
+
+
+3. 
+
+(a)
+
+```{r}
+x = c(2,4,4,5,6,8,13)
+y = c(0,0,0,1,1,2,2,2,3,3,3,4,8)
+
+t.test(x, y, var.equal=TRUE)
+t.test(x, y, var.equal=TRUE, alternative = "less")
+```
+
+(b)
+
+```{r}
+set.seed(1)
+n=10000
+xstar = rt(n, 6)
+lambdastar = xstar*(sd(x)/sqrt(7)) + mean(x)
+ystar = rt(n, 12)
+mustar = ystar*(sd(y)/sqrt(13)) + mean(y)
+difference = lambdastar - mustar
+quantile(difference, c(0.025, 0.975))
+(p = sum(difference > 0)/n)
+sqrt(p*(1-p)/n)
+
+n=100000
+xstar = rt(n, 6)
+lambdastar = xstar*(sd(x)/sqrt(7)) + mean(x)
+ystar = rt(n, 12)
+mustar = ystar*(sd(y)/sqrt(13)) + mean(y)
+difference = lambdastar - mustar
+quantile(difference, c(0.025, 0.975))
+(p = sum(difference > 0)/n)
+sqrt(p*(1-p)/n)
+
+
+n=1000000
+xstar = rt(n, 6)
+lambdastar = xstar*(sd(x)/sqrt(7)) + mean(x)
+ystar = rt(n, 12)
+mustar = ystar*(sd(y)/sqrt(13)) + mean(y)
+difference = lambdastar - mustar
+quantile(difference, c(0.025, 0.975))
+(p = sum(difference > 0)/n)
+sqrt(p*(1-p)/n)
+```
+
+
+(c)
+
+```{r}
+theta = atan((sd(x)/sqrt(7))/(sd(y)/sqrt(13)))
+f1 = ((7-1)/(7-3))*sin(theta)^2 + (13-1)/(13-3)*cos(theta)^2
+f2 = (7-1)^2/((7-3)^2*(7-5)^2)*sin(theta)^4 + (13-1)^2/((13-3)^2*(13-5))*cos(theta)^4
+b = 4 + f1^2/f2
+a = sqrt((f1*(b-2))/b)
+
+a*qt(.025, b)*sqrt(var(x)/7 + var(y)/13) + mean(x) - mean(y)
+a*qt(.975, b)*sqrt(var(x)/7 + var(y)/13) + mean(x) - mean(y)
+
+pt(((mean(x) - mean(y))/sqrt(var(x)/7 + var(y)/13))/a, b)
+
+bfTest(x, y)
+bfTest(x, y, alternative = "less")
+```
+
+
+(d)
+
+```{r}
+t.test(x, y, var.equal = FALSE)
+t.test(x, y, var.equal = FALSE, alternative = "less")
+
+sum(difference > 0.3631176 & difference < 7.1753439)/n
+```
+
